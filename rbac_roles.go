@@ -99,61 +99,61 @@ func (r *RBAC) RoleHasPermission(role Role, p Permission) (bool, error) {
 	return ok, nil
 }
 
-// AddRoleToUser assigns Role to User.
-// Both User and Role has to be registered.
-// Returns false if Role already assigned to User.
-func (r *RBAC) AssignRoleToUser(u User, role Role) (bool, error) {
+// AssignPermissionToRole assigns Permission to Role.
+// Both Permission and Role has to be registered.
+// Returns false if Permission already assigned to Role.
+func (r *RBAC) AssignPermissionToRole(role Role, p Permission) (bool, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	_, ok := r.registeredUsers[u]
-	if !ok {
-		return false, ErrorUserNotRegistered
-	}
-
-	_, ok = r.registeredRoles[role]
+	_, ok := r.registeredRoles[role]
 	if !ok {
 		return false, ErrorRoleNotRegistered
 	}
 
-	userRoles, ok := r.roles2users[u]
+	_, ok = r.registeredPermissions[p]
 	if !ok {
-		userRoles = make(map[Role]struct{})
-		userRoles[role] = struct{}{}
-		r.roles2users[u] = userRoles
+		return false, ErrorPermissionNotRegistered
+	}
+
+	rolePerms, ok := r.perms2roles[role]
+	if !ok {
+		rolePerms = make(map[Permission]struct{})
+		rolePerms[p] = struct{}{}
+		r.perms2roles[role] = rolePerms
 		return true, nil
 	}
-	_, ok = userRoles[role]
+	_, ok = rolePerms[p]
 	if ok {
 		return false, nil
 	}
-	userRoles[role] = struct{}{}
-	r.roles2users[u] = userRoles
+	rolePerms[p] = struct{}{}
+	r.perms2roles[role] = rolePerms
 	return true, nil
 }
 
-// RemoveRoleFromUser removes Role from User.
-// Both User and Role has to be registered.
-// Returns false if Role was not assigned to User.
-func (r *RBAC) RemoveRoleFromUser(u User, role Role) (bool, error) {
+// RemovePermissionFromUser removes Permission from Role.
+// Both Role and Permission has to be registered.
+// Returns false if Permission was not assigned to Role.
+func (r *RBAC) RemovePermissionFromUser(role Role, p Permission) (bool, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	_, ok := r.registeredUsers[u]
-	if !ok {
-		return false, ErrorUserNotRegistered
-	}
-
-	_, ok = r.registeredRoles[role]
+	_, ok := r.registeredRoles[role]
 	if !ok {
 		return false, ErrorRoleNotRegistered
 	}
 
-	_, ok = r.roles2users[u][role]
+	_, ok = r.registeredPermissions[p]
+	if !ok {
+		return false, ErrorPermissionNotRegistered
+	}
+
+	_, ok = r.perms2roles[role][p]
 	if !ok {
 		return false, nil
 	}
 
-	delete(r.roles2users[u], role)
+	delete(r.perms2roles[role], p)
 	return true, nil
 }

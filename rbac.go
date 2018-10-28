@@ -2,18 +2,8 @@ package rbac
 
 import "sync"
 
-
-/*
-type RBACController interface {
-	AddRole(role string) bool
-	RemoveRole(role string) bool
-	HasPermission(role string, object string, action string) bool
-	AddPermissionToRole(role string, object string, action string) bool
-	RemovePermissionFromRole(role string, object string, action string) bool
-	RemovePermissionsWithObject(object string) bool
-	RemovePermissionsWithAction(action string) bool
-}
-*/
+// RBAC describes controller that operates Users, Roles and Object-Action-based Permissions
+// For usage all objects( Users, Roles, Permissions has to be registered using correlated methods.
 type RBAC struct {
 	registeredPermissions map[Permission]struct{}
 	registeredRoles map[Role]struct{}
@@ -25,7 +15,7 @@ type RBAC struct {
 	mutex *sync.RWMutex
 }
 
-// NewRBAC creates instance of RBAC
+// NewRBAC creates instance of RBAC controller
 func NewRBAC() *RBAC {
 	return &RBAC{
 		registeredPermissions: make(map[Permission]struct{}),

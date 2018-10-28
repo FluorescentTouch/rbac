@@ -126,7 +126,7 @@ func (r *RBAC) UserHasObjectAction(u User, o Object, a Action) (bool, error) {
 	return r.UserHasPermission(u, p)
 }
 
-// AddRoleToUser assigns Role to User.
+// AssignRoleToUser assigns Role to User.
 // Both User and Role has to be registered.
 // Returns false if Role already assigned to User.
 func (r *RBAC) AssignRoleToUser(u User, role Role) (bool, error) {
