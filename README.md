@@ -1,3 +1,5 @@
+[![Godoc](https://godoc.org/github.com/casbin/casbin?status.svg)](https://godoc.org/github.com/FluorescentTouch/rbac)
+
 RBAC controller
 -------------------
 
