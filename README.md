@@ -1,4 +1,5 @@
 [![Godoc](https://godoc.org/github.com/casbin/casbin?status.svg)](https://godoc.org/github.com/FluorescentTouch/rbac)
+[![Build Status](https://travis-ci.org/casbin/casbin.svg?branch=master)](https://travis-ci.org/FluorescentTouch/rbac)
 
 RBAC controller
 -------------------
