@@ -125,10 +125,6 @@ func (rbac *RBAC) UserHasObjectAction(u User, o Object, a Action) (bool, error) 
 	defer rbac.mutex.RUnlock()
 
 	p := NewPermission(o, a)
-	_, ok := rbac.registeredPermissions[p]
-	if !ok {
-		return false, ErrorPermissionNotRegistered
-	}
 
 	return rbac.UserHasPermission(u, p)
 }
