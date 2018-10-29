@@ -25,6 +25,8 @@ func (rbac *RBAC) RemoveUser(u User) bool {
 		return false
 	}
 
+	delete(rbac.roles2users, u)
+
 	delete(rbac.registeredUsers, u)
 	return true
 }
@@ -99,6 +101,11 @@ func (rbac *RBAC) UserHasPermission(u User, p Permission) (bool, error) {
 	_, ok := rbac.registeredUsers[u]
 	if !ok {
 		return false, ErrorUserNotRegistered
+	}
+
+	_, ok = rbac.registeredPermissions[p]
+	if !ok {
+		return false, ErrorPermissionNotRegistered
 	}
 
 	userRoles := rbac.roles2users[u]

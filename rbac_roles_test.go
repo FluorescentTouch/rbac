@@ -56,7 +56,7 @@ func TestRemoveRole(t *testing.T) {
 	// case 3: role is registered, assigned to user
 	rbac.registeredRoles[r] = struct{}{}
 	rbac.registeredUsers[u] = struct{}{}
-	rbac.roles2users[u] = map[Role]struct{}{r:struct{}{}}
+	rbac.roles2users[u] = map[Role]struct{}{r:{}}
 
 	exist = rbac.RemoveRole(r)
 	if !exist {
@@ -131,13 +131,6 @@ func TestRoleExists(t *testing.T) {
 	}
 }
 
-/*
-ListRolePermissions
-RoleHasPermission
-AssignPermissionToRole
-RemovePermissionFromRole
-*/
-
 func TestAssignPermissionToRole(t *testing.T) {
 	rbac := NewRBAC()
 
@@ -165,7 +158,7 @@ func TestAssignPermissionToRole(t *testing.T) {
 		t.Errorf("[case 2] assign error: expected err equal %v, got nil", ErrorPermissionNotRegistered)
 	}
 
-	if err != ErrorRoleNotRegistered {
+	if err != ErrorPermissionNotRegistered {
 		t.Errorf("[case 2] assign error: expected err equal %v, got %v", ErrorPermissionNotRegistered, err)
 
 	}
@@ -191,7 +184,7 @@ func TestAssignPermissionToRole(t *testing.T) {
 	rbac.RegisterRole(r)
 	rbac.RegisterPermission(p)
 
-	rbac.perms2roles[r]=map[Permission]struct{}{p:struct{}{}}
+	rbac.perms2roles[r]=map[Permission]struct{}{p:{}}
 
 	ok, err = rbac.AssignPermissionToRole(r, p)
 	if err != nil {
@@ -222,9 +215,19 @@ func TestListRolePermissions(t *testing.T) {
 
 	}
 
-	// case 2: role is registered
+	// case 2: role is registered, no permission is assigned
 	rbac.RegisterRole(r)
 
+	list, err := rbac.ListRolePermissions(r)
+	if err != nil {
+		t.Errorf("[case 2] list error: expected err equal nil, got %v", err)
+	}
+	if len(list) > 0 {
+		t.Errorf("[case 2] list error: expected zero list lenght, got %d", len(list))
+	}
+
+	// case 3: role is registered, assigned 100 permissions
+	rbac.RegisterRole(r)
 	expectedToFind := make([]Permission, 0, 100)
 
 	for i := 0; i < 100; i++ {
@@ -242,7 +245,7 @@ func TestListRolePermissions(t *testing.T) {
 		expectedToFind = append(expectedToFind, p)
 	}
 
-	list, err := rbac.ListRolePermissions(r)
+	list, err = rbac.ListRolePermissions(r)
 	if err != nil {
 		t.Errorf("[case 2] list error: expected err equal nil, got %v", err)
 	}
@@ -259,5 +262,123 @@ func TestListRolePermissions(t *testing.T) {
 }
 
 func TestRoleHasPermission(t *testing.T) {
-	
+	rbac := NewRBAC()
+
+	r:= NewRole(defaultRoleID)
+	o := NewObject(defaultObjectID)
+	a := NewAction(defaultActionID)
+	p := NewPermission(o, a)
+
+	// case 1: role is not registered
+	_, err := rbac.RoleHasPermission(r, p)
+	if err == nil {
+		t.Errorf("[case 1] invalid output: expected err equal %v, got nil", ErrorRoleNotRegistered)
+	}
+
+	if err != ErrorRoleNotRegistered {
+		t.Errorf("[case 1] invalid output: expected err equal %v, got %v", ErrorRoleNotRegistered, err)
+
+	}
+
+	// case 2: role is registered, permission is not registered
+	rbac.RegisterRole(r)
+
+	_, err = rbac.RoleHasPermission(r, p)
+	if err == nil {
+		t.Errorf("[case 2] invalid output: expected err equal %v, got nil", ErrorPermissionNotRegistered)
+	}
+
+	if err != ErrorPermissionNotRegistered {
+		t.Errorf("[case 2] invalid output: expected err equal %v, got %v", ErrorPermissionNotRegistered, err)
+
+	}
+
+	// case 3: role and permission are registered, permission is not assigned to role
+	rbac.RegisterRole(r)
+	rbac.RegisterPermission(p)
+
+	ok, err := rbac.RoleHasPermission(r, p)
+	if err != nil {
+		t.Errorf("[case 3] invalid output: expected err equal nil, got %v", err)
+	}
+
+	if ok {
+		t.Errorf("[case 3] invalid output: expected %t, got %t", false, ok)
+	}
+
+	// case 4: role and permission are registered, permission is assigned to role
+	rbac.RegisterRole(r)
+	rbac.RegisterPermission(p)
+	rbac.AssignPermissionToRole(r, p)
+
+	ok, err = rbac.RoleHasPermission(r, p)
+	if err != nil {
+		t.Errorf("[case 4] invalid output: expected err equal nil, got %v", err)
+	}
+	if !ok {
+		t.Errorf("[case 4] invalid output: expected %t, got %t", true, ok)
+	}
+}
+
+func TestRemovePermissionFromRole(t *testing.T) {
+	rbac := NewRBAC()
+
+	r:= NewRole(defaultRoleID)
+	o := NewObject(defaultObjectID)
+	a := NewAction(defaultActionID)
+	p := NewPermission(o, a)
+
+	// case 1: role is not registered
+	_, err := rbac.RemovePermissionFromRole(r, p)
+	if err == nil {
+		t.Errorf("[case 1] invalid output: expected err equal %v, got nil", ErrorRoleNotRegistered)
+	}
+
+	if err != ErrorRoleNotRegistered {
+		t.Errorf("[case 1] invalid output: expected err equal %v, got %v", ErrorRoleNotRegistered, err)
+
+	}
+
+	// case 2: role is registered, permission is not registered
+	rbac.RegisterRole(r)
+
+	_, err = rbac.RemovePermissionFromRole(r, p)
+	if err == nil {
+		t.Errorf("[case 2] invalid output: expected err equal %v, got nil", ErrorPermissionNotRegistered)
+	}
+
+	if err != ErrorPermissionNotRegistered {
+		t.Errorf("[case 2] invalid output: expected err equal %v, got %v", ErrorPermissionNotRegistered, err)
+
+	}
+
+	// case 3: role and permission are registered, permission is not assigned to role
+	rbac.RegisterRole(r)
+	rbac.RegisterPermission(p)
+
+	ok, err := rbac.RemovePermissionFromRole(r, p)
+	if err != nil {
+		t.Errorf("[case 3] invalid output: expected err equal nil, got %v", err)
+	}
+
+	if ok {
+		t.Errorf("[case 3] invalid output: expected %t, got %t", false, ok)
+	}
+
+	// case 4: role and permission are registered, permission is assigned to role
+	rbac.RegisterRole(r)
+	rbac.RegisterPermission(p)
+	rbac.AssignPermissionToRole(r, p)
+
+	ok, err = rbac.RemovePermissionFromRole(r, p)
+	if err != nil {
+		t.Errorf("[case 4] invalid output: expected err equal nil, got %v", err)
+	}
+	if !ok {
+		t.Errorf("[case 4] invalid output: expected %t, got %t", true, ok)
+	}
+
+	if _, ok := rbac.perms2roles[r][p]; ok {
+		t.Errorf("[case 4] permission is not removed from role")
+	}
 }
