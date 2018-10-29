@@ -2,15 +2,15 @@ package rbac
 
 // RegisterPermission registers new Permission in RBAC controller.
 // Returns false if such Permission already registered.
-func (r *RBAC) RegisterPermission(p Permission) bool {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
+func (rbac *RBAC) RegisterPermission(p Permission) bool {
+	rbac.mutex.Lock()
+	defer rbac.mutex.Unlock()
 
-	_, ok := r.registeredPermissions[p]
+	_, ok := rbac.registeredPermissions[p]
 	if ok {
 		return false
 	}
-	r.registeredPermissions[p] = struct{}{}
+	rbac.registeredPermissions[p] = struct{}{}
 	return true
 }
 
@@ -18,45 +18,45 @@ func (r *RBAC) RegisterPermission(p Permission) bool {
 // RemovePermission removes Permission from RBAC controller registered permissions list.
 // Will also remove this Permission from all Roles.
 // Returns false if no such Permission were registered in controller.
-func (r *RBAC) RemovePermission(p Permission) bool {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
+func (rbac *RBAC) RemovePermission(p Permission) bool {
+	rbac.mutex.Lock()
+	defer rbac.mutex.Unlock()
 
-	_, ok := r.registeredPermissions[p]
+	_, ok := rbac.registeredPermissions[p]
 	if !ok {
 		return false
 	}
 
 	// removing permission from all roles
-	for role, perms := range r.perms2roles {
+	for r, perms := range rbac.perms2roles {
 		if _, ok := perms[p]; ok {
 			delete(perms, p)
-			r.perms2roles[role] = perms
+			rbac.perms2roles[r] = perms
 		}
 	}
 
-	delete(r.registeredPermissions, p)
+	delete(rbac.registeredPermissions, p)
 	return true
 }
 
 // ListPermissions returns all registered Permissions
-func (r *RBAC) ListPermissions() []Permission {
-	r.mutex.RLock()
-	defer r.mutex.RUnlock()
+func (rbac *RBAC) ListPermissions() []Permission {
+	rbac.mutex.RLock()
+	defer rbac.mutex.RUnlock()
 
-	out := make([]Permission, 0, len(r.registeredPermissions))
-	for p := range r.registeredPermissions {
+	out := make([]Permission, 0, len(rbac.registeredPermissions))
+	for p := range rbac.registeredPermissions {
 		out = append(out, p)
 	}
 	return out
 }
 
 // PermissionExists checks if Permission is registered in RBAC controller
-func (r *RBAC) PermissionExists(p Permission) bool {
-	r.mutex.RLock()
-	defer r.mutex.RUnlock()
+func (rbac *RBAC) PermissionExists(p Permission) bool {
+	rbac.mutex.RLock()
+	defer rbac.mutex.RUnlock()
 
-	_, ok := r.registeredPermissions[p]
+	_, ok := rbac.registeredPermissions[p]
 	return ok
 }
 
